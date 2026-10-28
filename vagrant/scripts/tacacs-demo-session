@@ -1,0 +1,13 @@
+#!/bin/bash
+# Дописать start в сегодняшний accounting, чтобы страница «Сессии»
+# показала открытую сессию alice без настоящего маршрутизатора.
+set -euo pipefail
+
+/usr/local/sbin/tacacs-logdirs
+day="$(date +%Y/%m/%d)"
+file="/var/log/tac_plus-ng/acct/${day}.log"
+line="$(date -u '+%Y-%m-%d %H:%M:%S +0000')"$'\t'"192.168.56.1"$'\t'"alice"$'\t'"tty1"$'\t'"203.0.113.10"$'\t'"start"$'\t'"task_id=demo"$'\t'"service=shell"$'\t'"priv-lvl=15"
+printf '%s\n' "${line}" >> "${file}"
+chgrp adm "${file}"
+chmod 640 "${file}"
+echo "Открытая сессия alice записана в ${file}"

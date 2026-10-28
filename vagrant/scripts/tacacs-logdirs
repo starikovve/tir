@@ -1,0 +1,15 @@
+#!/bin/bash
+# Каталоги журнала на текущий месяц. tac_plus-ng сам их не создаёт,
+# а путь в конфиге — acct/%Y/%m/%d.log. Юнит вызывает скрипт перед стартом.
+set -euo pipefail
+
+stamp="$(date +%Y/%m)"
+install -d -m 2750 -o root -g adm \
+  /var/log/tac_plus-ng \
+  /var/log/tac_plus-ng/authc \
+  /var/log/tac_plus-ng/authz \
+  /var/log/tac_plus-ng/acct
+install -d -m 2750 -o root -g adm \
+  "/var/log/tac_plus-ng/authc/${stamp}" \
+  "/var/log/tac_plus-ng/authz/${stamp}" \
+  "/var/log/tac_plus-ng/acct/${stamp}"

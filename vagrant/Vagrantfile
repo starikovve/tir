@@ -1,0 +1,32 @@
+# -*- mode: ruby -*-
+# Лабораторная ВМ tac_plus-ng и веб-интерфейса.
+# Хост — Windows, провайдер — VirtualBox. Поднимается одной командой: vagrant up.
+# Скрипт провижининга копируется по SSH с нормализованными LF, а не запускается
+# с общей папки: у vboxsf на Windows нет прав Unix и часто стоит noexec.
+
+require "tmpdir"
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "bento/ubuntu-24.04"
+  config.vm.hostname = "tacacs"
+
+  # Сеть host-only. Адрес .10 не пересекается с DHCP VirtualBox (обычно с .101).
+  config.vm.network "private_network", ip: "192.168.56.10"
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.name = "tacacs-lab"
+    # Сборка tac_plus-ng и два venv. Меньше памяти гость легко убивает make.
+    vb.memory = 2048
+    vb.cpus = 2
+  end
+
+  # Корень репозитория. Каталог vagrant/ и так смонтирован в /vagrant,
+  # но права там брать нельзя: provision.sh копирует файлы на диск ВМ.
+  config.vm.synced_folder "..", "/vagrant-src", type: "virtualbox"
+
+  script_path = File.expand_path("provision.sh", __dir__)
+  body = File.binread(script_path).gsub("\r\n", "\n")
+  normalized = File.join(Dir.tmpdir, "tacacs-provision.sh")
+  File.binwrite(normalized, body)
+  config.vm.provision "shell", path: normalized, privileged: true
+end
