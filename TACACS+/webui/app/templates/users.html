@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Пользователи{% endblock %}
+{% block body %}
+<h1>Пользователи веб-интерфейса</h1>
+<p class="muted">Эти имена нужны для входа в браузер. Чтобы роль «пользователь» видела свои сессии TACACS+, имя должно совпадать с именем в accounting-журнале.</p>
+<form method="get" action="/users">
+  <label>Поиск <input name="q" value="{{ q }}" placeholder="имя, роль, группа"></label>
+  <button type="submit">Найти</button>
+  {% if q %}<a href="/users">Сбросить</a>{% endif %}
+</form>
+<p><a href="/users/new">Добавить пользователя</a></p>
+<table>
+  <tr>
+    <th><a href="/users?sort=username&direction={% if sort == 'username' and direction == 'asc' %}desc{% else %}asc{% endif %}&q={{ q|urlencode }}">Имя{% if sort == 'username' %} {{ '↑' if direction == 'asc' else '↓' }}{% endif %}</a></th>
+    <th><a href="/users?sort=role&direction={% if sort == 'role' and direction == 'asc' %}desc{% else %}asc{% endif %}&q={{ q|urlencode }}">Роль{% if sort == 'role' %} {{ '↑' if direction == 'asc' else '↓' }}{% endif %}</a></th>
+    <th><a href="/users?sort=group&direction={% if sort == 'group' and direction == 'asc' %}desc{% else %}asc{% endif %}&q={{ q|urlencode }}">Группа{% if sort == 'group' %} {{ '↑' if direction == 'asc' else '↓' }}{% endif %}</a></th>
+    <th></th>
+  </tr>
+  {% for row in users %}
+  <tr>
+    <td>{{ row.username }}</td>
+    <td>{{ row.role }}</td>
+    <td>{{ row.group_name }}</td>
+    <td>
+      <a href="/users/{{ row.id }}/edit">Изменить</a>
+      {% if row.id != user.id %}
+      <form class="inline" method="post" action="/users/{{ row.id }}/delete" onsubmit="return confirm('Удалить пользователя {{ row.username }}?');">
+        <input type="hidden" name="csrf_token" value="{{ csrf }}">
+        <button type="submit">Удалить</button>
+      </form>
+      {% endif %}
+    </td>
+  </tr>
+  {% else %}
+  <tr><td colspan="4">Ничего не найдено.</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

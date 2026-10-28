@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}{% if account %}Изменить пользователя{% else %}Новый пользователь{% endif %}{% endblock %}
+{% block body %}
+<h1>{% if account %}Изменить пользователя{% else %}Новый пользователь{% endif %}</h1>
+{% set f = form if form else {} %}
+<form method="post">
+  <input type="hidden" name="csrf_token" value="{{ csrf }}">
+  <label>Имя
+    <input name="username" value="{{ f.get('username', account.username if account else '') }}" required>
+  </label>
+  {% if errors.get('username') %}<p class="error">{{ errors.username }}</p>{% endif %}
+  <label>Пароль
+    <input name="password" type="password" autocomplete="new-password" {% if not account %}required{% endif %}>
+  </label>
+  <p class="muted">{% if account %}Пустое поле оставляет прежний пароль.{% else %}Не короче 8 символов. Хранится только хеш argon2id.{% endif %}</p>
+  {% if errors.get('password') %}<p class="error">{{ errors.password }}</p>{% endif %}
+  {% set role = f.get('role', account.role if account else 'user') %}
+  <label>Роль
+    <select name="role">
+      <option value="admin" {% if role == 'admin' %}selected{% endif %}>admin — полный доступ</option>
+      <option value="user" {% if role == 'user' %}selected{% endif %}>user — только свои сессии и журнал</option>
+    </select>
+  </label>
+  {% if errors.get('role') %}<p class="error">{{ errors.role }}</p>{% endif %}
+  <label>Группа (метка)
+    <input name="group_name" value="{{ f.get('group_name', account.group_name if account else '') }}">
+  </label>
+  {% if errors.get('group_name') %}<p class="error">{{ errors.group_name }}</p>{% endif %}
+  <button type="submit">Сохранить</button>
+  <a href="/users">Отмена</a>
+</form>
+{% endblock %}

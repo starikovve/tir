@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Вход{% endblock %}
+{% block body %}
+<h1>Вход в веб-интерфейс</h1>
+<p class="muted">Это учётная запись веб-интерфейса, не логин из tac_plus-ng.cfg.</p>
+{% if error %}<p class="error">{{ error }}</p>{% endif %}
+<form method="post" action="/login">
+  <input type="hidden" name="csrf_token" value="{{ csrf }}">
+  <input type="hidden" name="next" value="{{ next }}">
+  <label>Имя <input name="username" autocomplete="username" required></label>
+  <label>Пароль <input name="password" type="password" autocomplete="current-password" required></label>
+  <button type="submit">Войти</button>
+</form>
+{% endblock %}

@@ -69,6 +69,8 @@ NAS — клиент TACACS+. Сервер хранит пользователе
 | [`devices/huawei-vrp.md`](devices/huawei-vrp.md) | Шаблон HWTACACS, схемы AAA, домен `default_admin`, авторизация команд по уровням |
 | [`devices/mikrotik-routeros.md`](devices/mikrotik-routeros.md) | Почему TACACS+ здесь не настраивается, и рабочая замена через RADIUS |
 | [`accounting.md`](accounting.md) | Куда пишет tac_plus-ng, примеры строк, ротация, поиск, отладка на сервере и `debug tacacs` на Cisco |
+| [`INSTALL.md`](INSTALL.md) | Установка tac_plus-ng и учебного веб-интерфейса на Ubuntu/Debian |
+| [`WEB_UI.md`](WEB_UI.md) | Страницы веб-интерфейса: что на них есть и кто это видит |
 
 Проверка синтаксиса основного файла (демон должен быть установлен):
 

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Устройства{% endblock %}
+{% block body %}
+<h1>Устройства</h1>
+<p class="muted">Карточки NAS для инвентаря. Ключ здесь — напоминание администратору; демон его из этой таблицы не читает.</p>
+<form method="get" action="/devices">
+  <label>Поиск <input name="q" value="{{ q }}" placeholder="имя, адрес, группа, тип"></label>
+  <button type="submit">Найти</button>
+  {% if q %}<a href="/devices">Сбросить</a>{% endif %}
+</form>
+<p><a href="/devices/new">Добавить устройство</a></p>
+<table>
+  <tr>
+    <th><a href="/devices?sort=name&direction={% if sort == 'name' and direction == 'asc' %}desc{% else %}asc{% endif %}&q={{ q|urlencode }}">Имя{% if sort == 'name' %} {{ '↑' if direction == 'asc' else '↓' }}{% endif %}</a></th>
+    <th><a href="/devices?sort=address&direction={% if sort == 'address' and direction == 'asc' %}desc{% else %}asc{% endif %}&q={{ q|urlencode }}">Адрес{% if sort == 'address' %} {{ '↑' if direction == 'asc' else '↓' }}{% endif %}</a></th>
+    <th><a href="/devices?sort=group&direction={% if sort == 'group' and direction == 'asc' %}desc{% else %}asc{% endif %}&q={{ q|urlencode }}">Группа{% if sort == 'group' %} {{ '↑' if direction == 'asc' else '↓' }}{% endif %}</a></th>
+    <th><a href="/devices?sort=vendor&direction={% if sort == 'vendor' and direction == 'asc' %}desc{% else %}asc{% endif %}&q={{ q|urlencode }}">Тип{% if sort == 'vendor' %} {{ '↑' if direction == 'asc' else '↓' }}{% endif %}</a></th>
+    <th>Ключ</th>
+    <th></th>
+  </tr>
+  {% for row in devices %}
+  <tr>
+    <td>{{ row.name }}</td>
+    <td>{{ row.address }}</td>
+    <td>{{ row.group_name }}</td>
+    <td>{{ row.vendor }}</td>
+    <td><code>{{ row.shared_key }}</code></td>
+    <td>
+      <a href="/devices/{{ row.id }}/edit">Изменить</a>
+      <form class="inline" method="post" action="/devices/{{ row.id }}/delete" onsubmit="return confirm('Удалить устройство {{ row.name }}?');">
+        <input type="hidden" name="csrf_token" value="{{ csrf }}">
+        <button type="submit">Удалить</button>
+      </form>
+    </td>
+  </tr>
+  {% else %}
+  <tr><td colspan="6">Ничего не найдено.</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

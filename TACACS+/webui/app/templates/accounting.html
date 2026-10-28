@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Журнал{% endblock %}
+{% block body %}
+<h1>Журнал accounting</h1>
+{% if user.role != "admin" %}
+<p>Показаны только строки пользователя {{ user.username }}.</p>
+{% endif %}
+<p class="muted">Источник: <code>{{ log_path }}</code>. На странице {{ rows|length }} из {{ total }}.</p>
+<form method="get" action="/accounting">
+  {% if user.role == "admin" %}
+  <label>Пользователь <input name="user" value="{{ query_user }}"></label>
+  {% endif %}
+  <label>NAS <input name="nas" value="{{ nas }}"></label>
+  <label>Текст команды <input name="text" value="{{ text }}"></label>
+  <label>С <input name="since" value="{{ since }}" placeholder="2026-10-28 14:00:00"></label>
+  <label>По <input name="until" value="{{ until }}" placeholder="2026-10-28 18:00:00"></label>
+  <button type="submit">Фильтр</button>
+  <a href="/accounting">Сбросить</a>
+</form>
+<table>
+  <tr><th>Время</th><th>Тип</th><th>Пользователь</th><th>NAS</th><th>Порт</th><th>Клиент</th><th>Команда</th><th>task_id</th></tr>
+  {% for row in rows %}
+  <tr>
+    <td>{{ row.ts }}</td>
+    <td>{{ row.kind }}</td>
+    <td>{{ row.user }}</td>
+    <td>{{ row.nas }}</td>
+    <td>{{ row.port }}</td>
+    <td>{{ row.nac }}</td>
+    <td>{{ row.command }}</td>
+    <td>{{ row.task_id }}</td>
+  </tr>
+  {% else %}
+  <tr><td colspan="8">Записей нет.</td></tr>
+  {% endfor %}
+</table>
+<p>
+  {% if page > 1 %}
+  <a href="/accounting?page={{ page - 1 }}&user={{ query_user|urlencode }}&nas={{ nas|urlencode }}&text={{ text|urlencode }}&since={{ since|urlencode }}&until={{ until|urlencode }}">Назад</a>
+  {% endif %}
+  Страница {{ page }} из {{ pages }}
+  {% if page < pages %}
+  <a href="/accounting?page={{ page + 1 }}&user={{ query_user|urlencode }}&nas={{ nas|urlencode }}&text={{ text|urlencode }}&since={{ since|urlencode }}&until={{ until|urlencode }}">Дальше</a>
+  {% endif %}
+</p>
+{% endblock %}

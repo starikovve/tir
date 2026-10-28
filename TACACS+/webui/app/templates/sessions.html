@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Сессии{% endblock %}
+{% block head %}<meta http-equiv="refresh" content="{{ refresh }}">{% endblock %}
+{% block body %}
+<h1>Открытые сессии</h1>
+<p class="muted">Страница обновляется каждые {{ refresh }} с. Пара start без более позднего stop с тем же NAS, именем и task_id (если task_id нет — по порту). Принудительно завершить сессию отсюда нельзя: у TACACS+ нет CoA.</p>
+{% if user.role != "admin" %}
+<p>Показаны только сессии пользователя {{ user.username }}. Чужое имя в адресе страницы не учитывается.</p>
+{% endif %}
+<p>Источник: <code>{{ log_path }}</code></p>
+<table>
+  <tr><th>Начало</th><th>Пользователь</th><th>NAS</th><th>Порт</th><th>Клиент</th><th>task_id</th><th>priv</th><th>Сервис</th></tr>
+  {% for row in sessions %}
+  <tr>
+    <td>{{ row.ts }}</td>
+    <td>{{ row.user }}</td>
+    <td>{{ row.nas }}</td>
+    <td>{{ row.port }}</td>
+    <td>{{ row.nac }}</td>
+    <td>{{ row.task_id }}</td>
+    <td>{{ row.priv }}</td>
+    <td>{{ row.service }}</td>
+  </tr>
+  {% else %}
+  <tr><td colspan="8">Открытых сессий нет.</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

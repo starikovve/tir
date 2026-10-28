@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Обзор{% endblock %}
+{% block body %}
+<h1>Обзор</h1>
+{% if user.role == "admin" %}
+<p>Устройств в инвентаре: {{ device_count }}. Учётных записей веб-интерфейса: {{ user_count }}.</p>
+<p class="muted">Инвентарь устройств и пользователи этой страницы не записываются в tac_plus-ng.cfg. Демон по-прежнему читает свой файл конфигурации.</p>
+{% else %}
+<p>Показаны только ваши сессии и строки журнала (имя {{ user.username }}).</p>
+{% endif %}
+<p>Открытых сессий: {{ sessions|length }}. Журнал: <code>{{ log_path }}</code></p>
+<h2>Сессии</h2>
+{% if sessions %}
+<table>
+  <tr><th>Начало</th><th>Пользователь</th><th>NAS</th><th>Порт</th><th>Клиент</th></tr>
+  {% for row in sessions[:8] %}
+  <tr>
+    <td>{{ row.ts }}</td><td>{{ row.user }}</td><td>{{ row.nas }}</td><td>{{ row.port }}</td><td>{{ row.nac }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% else %}
+<p>Открытых сессий нет. После start в accounting-журнале они появятся здесь.</p>
+{% endif %}
+<p><a href="/sessions">Все сессии</a></p>
+<h2>Последние строки учёта</h2>
+{% if recent %}
+<table>
+  <tr><th>Время</th><th>Тип</th><th>Пользователь</th><th>NAS</th><th>Команда</th></tr>
+  {% for row in recent %}
+  <tr>
+    <td>{{ row.ts }}</td><td>{{ row.kind }}</td><td>{{ row.user }}</td><td>{{ row.nas }}</td><td>{{ row.command }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% else %}
+<p>Журнал пуст или каталог ещё не создан.</p>
+{% endif %}
+{% endblock %}

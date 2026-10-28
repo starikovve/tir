@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}{% if device %}Изменить устройство{% else %}Новое устройство{% endif %}{% endblock %}
+{% block body %}
+<h1>{% if device %}Изменить устройство{% else %}Новое устройство{% endif %}</h1>
+{% set f = form if form else {} %}
+<form method="post">
+  <input type="hidden" name="csrf_token" value="{{ csrf }}">
+  <label>Имя
+    <input name="name" value="{{ f.get('name', device.name if device else '') }}" required>
+  </label>
+  {% if errors.get('name') %}<p class="error">{{ errors.name }}</p>{% endif %}
+  <label>Адрес или префикс
+    <input name="address" value="{{ f.get('address', device.address if device else '') }}" placeholder="192.0.2.21 или 192.0.2.0/24" required>
+  </label>
+  {% if errors.get('address') %}<p class="error">{{ errors.address }}</p>{% endif %}
+  <label>Ключ TACACS+
+    <input name="shared_key" value="{{ f.get('shared_key', device.shared_key if device else '') }}" required>
+  </label>
+  {% if errors.get('shared_key') %}<p class="error">{{ errors.shared_key }}</p>{% endif %}
+  <label>Группа (метка инвентаря)
+    <input name="group_name" value="{{ f.get('group_name', device.group_name if device else '') }}">
+  </label>
+  {% if errors.get('group_name') %}<p class="error">{{ errors.group_name }}</p>{% endif %}
+  {% set vendor = f.get('vendor', device.vendor if device else 'cisco') %}
+  <label>Тип
+    <select name="vendor">
+      {% for item in ['cisco', 'junos', 'huawei', 'other'] %}
+      <option value="{{ item }}" {% if vendor == item %}selected{% endif %}>{{ item }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  {% if errors.get('vendor') %}<p class="error">{{ errors.vendor }}</p>{% endif %}
+  <button type="submit">Сохранить</button>
+  <a href="/devices">Отмена</a>
+</form>
+{% endblock %}

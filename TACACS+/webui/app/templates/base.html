@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}TACACS+{% endblock %}</title>
+  {% block head %}{% endblock %}
+  <style>
+    body { font-family: sans-serif; margin: 1.5rem; color: #1c1c1c; line-height: 1.4; }
+    nav { margin-bottom: 1rem; }
+    nav a, nav button { margin-right: 0.7rem; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border-bottom: 1px solid #ccc; padding: 0.35rem 0.45rem; text-align: left; vertical-align: top; }
+    .error { color: #8a1f1f; }
+    .flash { background: #e7f3e7; padding: 0.5rem 0.7rem; }
+    .muted { color: #555; }
+    form.inline { display: inline; }
+    label { display: block; margin-top: 0.7rem; }
+    input, select { width: 24rem; max-width: 100%; }
+    button, .btn { margin-top: 0.8rem; }
+    code { font-size: 0.95em; }
+  </style>
+</head>
+<body>
+  {% if user %}
+  <nav>
+    <a href="/">Обзор</a>
+    {% if user.role == "admin" %}
+    <a href="/devices">Устройства</a>
+    <a href="/users">Пользователи</a>
+    <a href="/settings">Параметры</a>
+    {% endif %}
+    <a href="/sessions">Сессии</a>
+    <a href="/accounting">Журнал</a>
+    <a href="/account/password">Пароль</a>
+    <form class="inline" method="post" action="/logout">
+      <input type="hidden" name="csrf_token" value="{{ csrf }}">
+      <button type="submit">Выход</button>
+    </form>
+    <span class="muted">{{ user.username }} ({{ "администратор" if user.role == "admin" else "пользователь" }})</span>
+  </nav>
+  {% endif %}
+  {% if flash %}<p class="flash">{{ flash }}</p>{% endif %}
+  {% block body %}{% endblock %}
+</body>
+</html>
