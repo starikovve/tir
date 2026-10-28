@@ -11,7 +11,7 @@
 ```bash
 sudo apt-get update
 sudo apt-get install -y build-essential git libpcre2-dev perl \
-  python3-venv python3-pip nginx openssl
+  python3 python3-venv python3-pip nginx openssl sqlite3
 ```
 
 `configure` у event-driven-servers — это Perl-скрипт, не autoconf. PCRE2 для tac_plus-ng обязателен. `--minimum` отключает необязательные библиотеки (TLS, LDAP, c-ares), но без заголовков PCRE2 сборка остановится.
@@ -47,14 +47,14 @@ sudo install -d -m 2750 -o root -g adm \
   /var/log/tac_plus-ng/authc \
   /var/log/tac_plus-ng/authz \
   /var/log/tac_plus-ng/acct
-# Каталоги дня демон сам не создаёт. Пример пишет acct/%Y/%m/%d.log.
+# Каталог текущего месяца. Пример пишет acct/%Y/%m/%d.log.
 sudo install -d -m 2750 -o root -g adm \
   /var/log/tac_plus-ng/authc/"$(date +%Y/%m)" \
   /var/log/tac_plus-ng/authz/"$(date +%Y/%m)" \
   /var/log/tac_plus-ng/acct/"$(date +%Y/%m)"
 ```
 
-Группа каталога должна совпадать с группой пользователя веб-интерфейса (ниже это `tacacsui`), иначе новые файлы с `umask = 0640` ему не прочитать. Бит setgid (`2750`) передаёт группу каталога новым файлам.
+Каталоги принадлежат группе `adm`. Бит setgid (`2750`) передаёт эту группу новым файлам, а `umask = 0640` в конфиге демона оставляет группе чтение. Пользователя веб-интерфейса (ниже это `tacacsui`) добавляют в группу `adm`, иначе он не откроет accounting. Каталог дня демон сам не создаёт: в следующем месяце команду `install -d` для `%Y/%m` повторяют до старта, либо вешают её на `ExecStartPre` юнита.
 
 Демон слушает TCP/49 на всех адресах (`listen { address = 0.0.0.0 port = 49 }` в примере). Открывайте порт только оттуда, откуда стоят NAS:
 
@@ -99,23 +99,26 @@ sudo systemctl enable --now tac_plus-ng.service
 | --- | --- |
 | `app/main.py` | Страницы FastAPI |
 | `app/models.py` | Таблицы `users` и `devices` |
-| `app/auth.py` | argon2id и проверка роли |
-| `app/acct.py` | Разбор accounting-журнала |
+| `app/auth.py` | argon2id, CSRF, проверка роли |
+| `app/acct.py` | Разбор accounting-журнала и открытые сессии |
+| `app/settings.py` | Чтение `.env` |
 | `app/templates/` | HTML-страницы |
-| `requirements.txt` | Зависимости |
+| `requirements.txt` | FastAPI, uvicorn, Jinja2, SQLAlchemy, argon2-cffi, slowapi |
 | `.env.example` | Образец переменных, без секретов |
 
-Почему FastAPI, а не отдельный шаблонный движок: страницы — обычный HTML через Jinja2, формы и cookie-сессия собираются на одном процессе, sqlite подключается через SQLAlchemy. Отдельный фронтенд этому стенду не нужен.
+Страницы — обычный HTML через Jinja2. Формы, cookie-сессия и sqlite (SQLAlchemy) живут в одном процессе. Отдельный фронтенд этому стенду не нужен. Пароли веб-входа хеширует argon2id. Лимит попыток входа считает slowapi в памяти процесса.
 
 ```bash
 sudo useradd --system --home /opt/tacacs-ui --shell /usr/sbin/nologin tacacsui || true
+sudo usermod -aG adm tacacsui
 sudo mkdir -p /opt/tacacs-ui
 sudo cp -a webui/. /opt/tacacs-ui/
 sudo python3 -m venv /opt/tacacs-ui/.venv
 sudo /opt/tacacs-ui/.venv/bin/pip install -r /opt/tacacs-ui/requirements.txt
+sudo chown -R tacacsui:tacacsui /opt/tacacs-ui
 ```
 
-Файл `/opt/tacacs-ui/.env` (права `640`, владелец `tacacsui`). Секреты только здесь, в репозиторий их не кладут:
+Файл `/opt/tacacs-ui/.env` (права `640`, владелец `tacacsui`). Секреты только здесь, в репозиторий их не кладут. После записи файла: `sudo chown tacacsui:tacacsui /opt/tacacs-ui/.env && sudo chmod 640 /opt/tacacs-ui/.env`. Строки файла:
 
 ```bash
 APP_SECRET_KEY=$(openssl rand -hex 32)
@@ -124,9 +127,14 @@ ACCOUNTING_LOG=/var/log/tac_plus-ng/acct
 SESSION_COOKIE_SECURE=true
 BOOTSTRAP_ADMIN_USER=admin
 BOOTSTRAP_ADMIN_PASSWORD=$(openssl rand -hex 12)
+LOGIN_RATE_LIMIT=5/minute
 ```
 
 `SESSION_COOKIE_SECURE=true` ставят за nginx с HTTPS. Если открываете сам uvicorn по HTTP, поставьте `false`: иначе браузер не сохранит cookie и вход не удержится.
+
+Cookie сессии называется `tacacs_ui`. Приложение всегда ставит **HttpOnly** (из JavaScript её не прочитать) и **SameSite=Lax**, срок — 8 часов. Флаг **Secure** включается только переменной `SESSION_COOKIE_SECURE`. Секрет подписи — `APP_SECRET_KEY`, в коде его нет. Пустой или короче 16 символов ключ процесс не запускает.
+
+`LOGIN_RATE_LIMIT` ограничивает `POST /login` с одного адреса. Формат: `число/second`, `число/minute`, `число/hour` или `число/day`. По умолчанию `5/minute`. Счётчик в памяти одного процесса: юнит ниже `--workers` не задаёт. За nginx адрес берётся из заголовка `X-Real-IP` (его выставляет nginx из `$remote_addr`), а не из клиентского `X-Forwarded-For`.
 
 `BOOTSTRAP_ADMIN_*` создаёт первого администратора **только если таблица пользователей пуста**. Повторный запуск пароль не меняет.
 
@@ -187,7 +195,10 @@ server {
     location / {
         proxy_pass http://127.0.0.1:8080;
         proxy_set_header Host $host;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        # Свой адрес клиента, без префикса, который прислал браузер.
+        # По нему веб-интерфейс считает лимит входа (заголовок X-Real-IP).
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $remote_addr;
         proxy_set_header X-Forwarded-Proto https;
     }
 }
@@ -252,3 +263,16 @@ python3 -m venv /tmp/tacacs-client
 ```
 
 Ключ должен совпасть с `device`, в чей адрес попал **источник** TCP-сессии. В примере репозитория это сеть `192.0.2.0/24` (ключ `lab-default-key`) и более узкие адреса со своими ключами. Чужой адрес демон отбрасывает ещё до проверки пароля. `127.0.0.1` в пример сам по себе не входит: для проверки с localhost в конфиг добавляют отдельный `device` с этим адресом и тем же ключом, который передаёте в `-k`.
+
+## 8. Контрольный список
+
+- [ ] `tac_plus-ng -P /etc/tac_plus-ng/tac_plus-ng.cfg` завершается без ошибки, `systemctl status tac_plus-ng` — active, `ss` показывает TCP/49.
+- [ ] Каталоги `/var/log/tac_plus-ng/{authc,authz,acct}/ГГГГ/ММ` есть, `tacacsui` входит в группу `adm` (`id tacacsui`).
+- [ ] `/opt/tacacs-ui/.env` на месте, режим `640`, в репозитории этого файла нет. `APP_SECRET_KEY` и `BOOTSTRAP_ADMIN_PASSWORD` заданы здесь, не в коде.
+- [ ] `systemctl status tacacs-ui` — active. После первого запуска появился файл sqlite из `DATABASE_URL`.
+- [ ] nginx слушает 443, `nginx -t` чистый. Браузер открывает `https://адрес/` и предупреждает о самоподписанном сертификате.
+- [ ] Вход администратора открывает обзор. В ответе `Set-Cookie` у `tacacs_ui` есть `HttpOnly` и `SameSite=Lax`, а при `SESSION_COOKIE_SECURE=true` ещё и `Secure`.
+- [ ] Лишняя попытка `POST /login` сверх `LOGIN_RATE_LIMIT` отвечает 429 и текстом «Слишком много попыток входа».
+- [ ] Роль `user` на `/devices`, `/users` и `/settings` получает 403. В журнале и сессиях видны только строки с её именем, параметр `?user=` чужое имя не подставляет.
+- [ ] Устройство и пользователь создаются, правятся и удаляются. Последнего admin и самого себя удалить нельзя.
+- [ ] Строка `start` в accounting появляется на странице «Сессии». `stop` с `cmd` эту сессию не убирает, `stop` без команды — убирает.

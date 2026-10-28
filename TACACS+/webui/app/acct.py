@@ -83,14 +83,19 @@ def load_records(root: str) -> list[dict]:
 
 
 def active_sessions(records: list[dict]) -> list[dict]:
-    """start без последующего stop с тем же NAS, пользователем и task_id (или портом)."""
+    """Открытые сессии: start без последующего stop самой сессии.
+
+    Командный учёт NAS тоже шлёт как stop, но с текстом команды (cmd / cmd-arg).
+    Такой stop сессию не закрывает: иначе первая же команда убирает её из списка.
+    Закрывает только stop без команды. Если task_id пустой, пара ищется по порту.
+    """
     open_sessions: dict[tuple[str, str, str], dict] = {}
     for record in records:
         marker = record["task_id"] or record["port"]
         key = (record["nas"], record["user"], marker)
         if record["kind"] == "start":
             open_sessions[key] = record
-        elif record["kind"] == "stop":
+        elif record["kind"] == "stop" and not record["command"]:
             open_sessions.pop(key, None)
     sessions = list(open_sessions.values())
     sessions.sort(key=lambda item: item["ts"], reverse=True)

@@ -7,7 +7,11 @@
   <tr><th>Параметр</th><th>Значение</th></tr>
   <tr><td>Каталог или файл accounting</td><td><code>{{ accounting_log }}</code></td></tr>
   <tr><td>База sqlite</td><td><code>{{ database_url }}</code></td></tr>
+  <tr><td>Cookie HttpOnly</td><td>да</td></tr>
+  <tr><td>Cookie SameSite</td><td>{{ cookie_samesite }}</td></tr>
   <tr><td>Cookie Secure</td><td>{{ "да" if cookie_secure else "нет" }}</td></tr>
+  <tr><td>Срок cookie</td><td>{{ cookie_hours }} ч</td></tr>
+  <tr><td>Лимит входа</td><td><code>{{ login_rate_limit }}</code> с одного адреса</td></tr>
   <tr><td>Обновление страницы сессий</td><td>10 секунд</td></tr>
 </table>
 <p>Первый администратор задаётся переменными <code>BOOTSTRAP_ADMIN_USER</code> и <code>BOOTSTRAP_ADMIN_PASSWORD</code> до первого запуска. Когда в базе уже есть пользователь, эти переменные пароль не перезаписывают.</p>

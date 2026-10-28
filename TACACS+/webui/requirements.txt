@@ -6,3 +6,4 @@ sqlalchemy>=2.0,<3
 argon2-cffi>=23.1,<26
 pydantic-settings>=2.6,<3
 itsdangerous>=2.2,<3
+slowapi>=0.1.9,<1

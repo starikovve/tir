@@ -1,11 +1,13 @@
 import ipaddress
 from contextlib import asynccontextmanager
+from pathlib import Path
 from urllib.parse import quote
 
 from fastapi import Depends, FastAPI, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
-from pathlib import Path
+from slowapi import Limiter
+from slowapi.errors import RateLimitExceeded
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 from starlette.middleware.sessions import SessionMiddleware
@@ -29,6 +31,25 @@ settings = get_settings()
 templates = Jinja2Templates(directory=str(Path(__file__).resolve().parent / "templates"))
 VENDORS = ("cisco", "junos", "huawei", "other")
 PAGE_SIZE = 50
+# Срок cookie сессии. HttpOnly задаёт сам SessionMiddleware и не отключается.
+SESSION_MAX_AGE = 8 * 60 * 60
+SESSION_SAMESITE = "lax"
+
+
+def client_address(request: Request) -> str:
+    """Адрес для лимита входа.
+
+    Процесс слушает только localhost, снаружи его видит nginx. Заголовок
+    X-Forwarded-For клиент может подделать, поэтому от соседа по петле
+    принимается X-Real-IP, который nginx ставит из своего $remote_addr.
+    Прямой запрос к uvicorn (без nginx) учитывается по адресу сокета.
+    """
+    peer = request.client.host if request.client else ""
+    if peer in {"127.0.0.1", "::1"}:
+        real = request.headers.get("x-real-ip", "").strip()
+        if real:
+            return real
+    return peer or "local"
 
 
 class LoginRequired(Exception):
@@ -55,14 +76,19 @@ async def lifespan(_app: FastAPI):
 
 
 app = FastAPI(title="TACACS+ lab UI", lifespan=lifespan)
+# Ключ подписи cookie берётся из APP_SECRET_KEY. В коде его нет.
+# Флаги cookie: HttpOnly (внутри SessionMiddleware), SameSite=Lax, Secure — из настройки.
 app.add_middleware(
     SessionMiddleware,
     secret_key=settings.app_secret_key,
     session_cookie="tacacs_ui",
-    max_age=8 * 60 * 60,
-    same_site="lax",
+    max_age=SESSION_MAX_AGE,
+    same_site=SESSION_SAMESITE,
     https_only=settings.session_cookie_secure,
 )
+# Счётчик попыток входа живёт в памяти этого процесса.
+limiter = Limiter(key_func=client_address, headers_enabled=False)
+app.state.limiter = limiter
 
 
 @app.middleware("http")
@@ -151,6 +177,24 @@ async def forbidden(request: Request, _exc: Forbidden):
         db.close()
 
 
+@app.exception_handler(RateLimitExceeded)
+async def too_many_logins(request: Request, _exc: RateLimitExceeded):
+    """Лимит считается до проверки пароля, чтобы перебор упирался в него сразу."""
+    db = SessionLocal()
+    try:
+        response = render(
+            request,
+            db,
+            "error.html",
+            status=429,
+            message="Слишком много попыток входа. Подождите и попробуйте снова.",
+        )
+    finally:
+        db.close()
+    response.headers["Retry-After"] = "60"
+    return response
+
+
 @app.exception_handler(BadCsrf)
 async def bad_csrf(request: Request, _exc: BadCsrf):
     db = SessionLocal()
@@ -174,6 +218,7 @@ def login_form(request: Request, db: Session = Depends(get_db)):
 
 
 @app.post("/login")
+@limiter.limit(settings.login_rate_limit)
 async def login_submit(request: Request, db: Session = Depends(get_db)):
     form = await posted(request)
     username = form.get("username", "").strip()
@@ -188,9 +233,9 @@ async def login_submit(request: Request, db: Session = Depends(get_db)):
             error="Неверное имя или пароль.",
             next=safe_next(form.get("next", "/")),
         )
+    # Новая сессия: старый идентификатор не переносится, csrf выпускается заново.
     request.session.clear()
     request.session["uid"] = user.id
-    request.session["csrf"] = csrf_token({})
     csrf_token(request.session)
     return RedirectResponse(safe_next(form.get("next", "/")), status_code=303)
 
@@ -595,4 +640,7 @@ def settings_page(request: Request, db: Session = Depends(get_db)):
         accounting_log=settings.accounting_log,
         database_url=settings.database_url,
         cookie_secure=settings.session_cookie_secure,
+        cookie_samesite=SESSION_SAMESITE,
+        cookie_hours=SESSION_MAX_AGE // 3600,
+        login_rate_limit=settings.login_rate_limit,
     )
