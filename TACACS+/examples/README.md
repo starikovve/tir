@@ -9,6 +9,11 @@
 `mavis_tacplus-ng_ldap.pl` забирает это имя из `memberOf` (`LDAP_MEMBEROF_REGEX`) и отдаёт его как группу tac_plus-ng. Регистр CN должен совпасть с `group` в конфиге.
 Если юзер в нескольких группах — срабатывает самое верхнее правило (приоритет ADMIN > OPERATOR > READONLY).
 
+| Порт | Когда |
+| --- | --- |
+| 389 LDAP, 636 LDAPS | Один домен. В конфиге включён 636. |
+| 3268 GC, 3269 GC по TLS | Весь лес. На GC `memberOf` — только universal-группы, `LDAP_BASE` — корень леса. 3268 без TLS не рекомендуется. |
+
 Серверный файл поправлен и проверен: `tac_plus-ng -P TACACS+/examples/tac_plus-ng-ad-levels.cfg`.
 
 Пароли и ключи — лабораторные, замени на боевые.
