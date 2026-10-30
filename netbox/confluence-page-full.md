@@ -1,6 +1,6 @@
-# Регламент работы с сервисом NetBox (v1.4) — полная страница Confluence
+# Регламент работы с сервисом NetBox (v1.5) — полная страница Confluence
 
-> Полная страница в Confluence storage format (XHTML): описание, весь текст регламента v1.4
+> Полная страница в Confluence storage format (XHTML): описание, весь текст регламента v1.5
 > (разделы 1–9, как в `reglament.pdf`) и подтверждение ознакомления.
 >
 > Как вставить: откройте страницу → Source Editor (или «Вставить → Разметка / Insert markup»,
@@ -8,10 +8,10 @@
 > Файл `reglament.pdf` из этой папки можно дополнительно приложить к странице как вложение.
 
 ```xml
-<h1>Регламент работы с сервисом NetBox, версия 1.4</h1>
+<h1>Регламент работы с сервисом NetBox, версия 1.5</h1>
 
 <ac:structured-macro ac:name="info" ac:schema-version="1">
-  <ac:rich-text-body><p>Версия регламента: <strong>1.4</strong>. Сетевой отдел, внутренний документ. Полный текст продублирован в PDF <code>reglament.pdf</code> (можно приложить к странице).</p></ac:rich-text-body>
+  <ac:rich-text-body><p>Версия регламента: <strong>1.5</strong>. Сетевой отдел, внутренний документ. Полный текст продублирован в PDF <code>reglament.pdf</code> (можно приложить к странице).</p></ac:rich-text-body>
 </ac:structured-macro>
 
 <p>Регламент — внутренний документ сетевого отдела. Он задаёт единые правила ведения данных в NetBox, который у нас является единым источником истины (source of truth) сетевой инфраструктуры. Все VLAN, подсети, префиксы и сетевое оборудование сначала вносятся в NetBox и только потом применяются на оборудовании.</p>
@@ -32,7 +32,7 @@
 <p>В конце документа — раздел 9 с обязательными правилами.</p>
 
 <h2>РЕГЛАМЕНТ РАБОТЫ С СЕРВИСОМ NetBox</h2>
-<p><em>Сетевой отдел · Внутренний документ · Версия 1.4</em></p>
+<p><em>Сетевой отдел · Внутренний документ · Версия 1.5</em></p>
 <h2>1. Назначение</h2>
 <p>NetBox является единым источником истины (source of truth) сетевой инфраструктуры компании. Все данные о VLAN, подсетях, префиксах и сетевом оборудовании вносятся исключительно через NetBox. Конфигурации сетевых устройств строятся на основе данных NetBox. Любые изменения в инфраструктуре сначала фиксируются в NetBox, затем применяются на оборудовании.</p>
 <h2>2. VLAN-группы</h2>
@@ -138,6 +138,7 @@
 <p>При создании <code>agg01.sales.msk</code> с этим типом на устройстве сразу появятся 28 физических интерфейсов; виртуальный Vlan10 добавляется вручную.</p>
 <h2>9. Обязательные правила</h2>
 <ol>
+  <li>Любые изменения инфраструктуры — перенос оборудования, удаление сетей, расформирование и другие изменения — в первую очередь вносятся в NetBox. NetBox является источником истины, остальные системы синхронизируются с ним.</li>
   <li>Никаких изменений на оборудовании без предварительной записи в NetBox.</li>
   <li>VLAN без группы не создаются.</li>
   <li>Префикс без description и номера тикета в comments не принимается.</li>
@@ -152,10 +153,10 @@
 <!-- Требуется приложение «Survey and Vote Macros for Confluence» (Appfire/Comalatech).
      Имена параметров сверьте с версией приложения на вашем сервере. -->
 <ac:structured-macro ac:name="survey" ac:schema-version="1">
-  <ac:parameter ac:name="title">Ознакомление с регламентом NetBox v1.4</ac:parameter>
+  <ac:parameter ac:name="title">Ознакомление с регламентом NetBox v1.5</ac:parameter>
   <ac:parameter ac:name="visibleVoters">true</ac:parameter>
   <ac:parameter ac:name="changeableVotes">false</ac:parameter>
-  <ac:plain-text-body><![CDATA[Ознакомлен с регламентом NetBox v1.4
+  <ac:plain-text-body><![CDATA[Ознакомлен с регламентом NetBox v1.5
 Да]]></ac:plain-text-body>
 </ac:structured-macro>
 ```
@@ -171,9 +172,9 @@
 <p>Отметьте свою задачу после прочтения регламента.</p>
 <ac:task-list>
   <ac:task><ac:task-status>incomplete</ac:task-status>
-    <ac:task-body><ac:link><ri:user ri:account-id="ACCOUNT_ID_1" /></ac:link> ознакомлен с регламентом NetBox v1.4</ac:task-body></ac:task>
+    <ac:task-body><ac:link><ri:user ri:account-id="ACCOUNT_ID_1" /></ac:link> ознакомлен с регламентом NetBox v1.5</ac:task-body></ac:task>
   <ac:task><ac:task-status>incomplete</ac:task-status>
-    <ac:task-body><ac:link><ri:user ri:account-id="ACCOUNT_ID_2" /></ac:link> ознакомлен с регламентом NetBox v1.4</ac:task-body></ac:task>
+    <ac:task-body><ac:link><ri:user ri:account-id="ACCOUNT_ID_2" /></ac:link> ознакомлен с регламентом NetBox v1.5</ac:task-body></ac:task>
 </ac:task-list>
 ```
 

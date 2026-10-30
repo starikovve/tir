@@ -1,4 +1,4 @@
-# Регламент работы с сервисом NetBox (v1.4)
+# Регламент работы с сервисом NetBox (v1.5)
 
 > Текст страницы Confluence. Ниже два варианта: описание с пометками, куда вставить макросы,
 > и готовый фрагмент в Confluence storage format (XHTML). Перед публикацией приложите к странице
@@ -8,7 +8,7 @@
 
 ## 1. Текст страницы
 
-**Регламент работы с сервисом NetBox, версия 1.4**
+**Регламент работы с сервисом NetBox, версия 1.5**
 
 Регламент — внутренний документ сетевого отдела. Он задаёт единые правила ведения данных в NetBox, который у нас является единым источником истины (source of truth) сетевой инфраструктуры. Все VLAN, подсети, префиксы и сетевое оборудование сначала вносятся в NetBox и только потом применяются на оборудовании.
 
@@ -30,7 +30,7 @@
 
 **Подтверждение ознакомления.** Прочитайте регламент и отметьте ответ «Да» в опросе ниже.
 
-<!-- МАКРОС: Survey (приложение Survey and Vote Macros), вопрос «Ознакомлен с регламентом NetBox v1.4», вариант «Да» -->
+<!-- МАКРОС: Survey (приложение Survey and Vote Macros), вопрос «Ознакомлен с регламентом NetBox v1.5», вариант «Да» -->
 
 ---
 
@@ -40,7 +40,7 @@
 (`body.storage.value`).
 
 ```xml
-<h1>Регламент работы с сервисом NetBox, версия 1.4</h1>
+<h1>Регламент работы с сервисом NetBox, версия 1.5</h1>
 
 <p>Регламент — внутренний документ сетевого отдела. Он задаёт единые правила ведения данных в NetBox, который у нас является единым источником истины (source of truth) сетевой инфраструктуры. Все VLAN, подсети, префиксы и сетевое оборудование сначала вносятся в NetBox и только потом применяются на оборудовании.</p>
 
@@ -71,10 +71,10 @@
 <!-- Требуется приложение «Survey and Vote Macros for Confluence» (Appfire/Comalatech).
      Имена параметров сверьте с версией приложения на вашем сервере. -->
 <ac:structured-macro ac:name="survey" ac:schema-version="1">
-  <ac:parameter ac:name="title">Ознакомление с регламентом NetBox v1.4</ac:parameter>
+  <ac:parameter ac:name="title">Ознакомление с регламентом NetBox v1.5</ac:parameter>
   <ac:parameter ac:name="visibleVoters">true</ac:parameter>
   <ac:parameter ac:name="changeableVotes">false</ac:parameter>
-  <ac:plain-text-body><![CDATA[Ознакомлен с регламентом NetBox v1.4
+  <ac:plain-text-body><![CDATA[Ознакомлен с регламентом NetBox v1.5
 Да]]></ac:plain-text-body>
 </ac:structured-macro>
 ```
@@ -90,9 +90,9 @@
 ```xml
 <ac:task-list>
   <ac:task><ac:task-status>incomplete</ac:task-status>
-    <ac:task-body><ac:link><ri:user ri:account-id="ACCOUNT_ID_1" /></ac:link> ознакомлен с регламентом NetBox v1.4</ac:task-body></ac:task>
+    <ac:task-body><ac:link><ri:user ri:account-id="ACCOUNT_ID_1" /></ac:link> ознакомлен с регламентом NetBox v1.5</ac:task-body></ac:task>
   <ac:task><ac:task-status>incomplete</ac:task-status>
-    <ac:task-body><ac:link><ri:user ri:account-id="ACCOUNT_ID_2" /></ac:link> ознакомлен с регламентом NetBox v1.4</ac:task-body></ac:task>
+    <ac:task-body><ac:link><ri:user ri:account-id="ACCOUNT_ID_2" /></ac:link> ознакомлен с регламентом NetBox v1.5</ac:task-body></ac:task>
 </ac:task-list>
 ```
 
